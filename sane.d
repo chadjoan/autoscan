@@ -16,81 +16,7 @@
 
    D binding translated by Chad Joan*/
 
-mixin template dequalifyEnumMembers(theEnum, members...)
-{
-    static if ( members.length > 0 )
-    {
-        mixin("alias "~theEnum.stringof~"."~members[0]~" "~members[0]~";");
-        mixin dequalifyEnumMembers!(theEnum, members[1..$]);
-    }
-}
-
-mixin template dequalifyEnum(theEnum) if (is(theEnum == enum))
-{
-    mixin dequalifyEnumMembers!(theEnum, __traits(allMembers, theEnum));
-}
-
-pure nothrow string generateEnumToString(theEnum)() if (is(theEnum == enum))
-{
-    string result =
-        "string toString("~theEnum.stringof~" val)\n"~
-        "{\n"~
-        "    final switch(val)\n"~
-        "    {\n";
-
-    foreach( member; __traits(allMembers, theEnum) )
-    {
-        result ~=
-        "        case "~theEnum.stringof~"."~member~": return \""~theEnum.stringof~"."~member~"\";\n";
-    }
-
-    result ~=
-        "    }\n"~
-        "    assert(0);\n"~
-        "}\n";
-    return result;
-}
-
-mixin template toStringifyEnum(theEnum) if (is(theEnum == enum))
-{
-    mixin(generateEnumToString!theEnum());
-}
-
-pure nothrow string generateFlagsToString(theEnum)() if (is(theEnum == enum))
-{
-    string result =
-`import std.exception : assumeUnique;
-string toString(`~theEnum.stringof~` val)
-{
-    char[] result = "`~theEnum.stringof~`{".dup;
-`;
-
-    foreach( member; __traits(allMembers, theEnum) )
-    {
-        result ~=
-`    if ( val & `~theEnum.stringof~`.`~member~` )
-        result ~= "`~member~`|";
-`;
-    }
-
-    result ~=
-`
-    if ( result[$-1] == '|' )
-        result[$-1] = '}';
-    else
-        result ~= "}";
-
-    return assumeUnique(result);
-}
-`;
-
-    return result;
-}
-
-mixin template toStringifyFlags(theEnum) if (is(theEnum == enum))
-{
-    mixin(generateFlagsToString!theEnum());
-}
+import enum_enhancers;
 
 /*
  * SANE types and defines
@@ -191,8 +117,6 @@ enum SANE_Capability : SANE_Int
     SANE_CAP_INACTIVE    = (1 << 5),
     SANE_CAP_ADVANCED    = (1 << 6),
 }
-
-pragma(msg,generateFlagsToString!SANE_Capability());
 
 pure nothrow SANE_Bool SANE_OPTION_IS_ACTIVE(SANE_Int cap)   { return (cap & SANE_CAP_INACTIVE) == 0; }
 pure nothrow SANE_Bool SANE_OPTION_IS_SETTABLE(SANE_Int cap) { return (cap & SANE_CAP_SOFT_SELECT) != 0; }

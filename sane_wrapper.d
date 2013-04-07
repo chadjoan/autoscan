@@ -14,6 +14,7 @@ import std.traits;
 import std.range;
 import std.stdio;
 import std.c.string;
+import std.exception;
 import core.exception;
 
 /++
@@ -113,8 +114,7 @@ struct SaneHandle
     SANE_Handle c;
     alias c this;
 
-    @property SaneOptionDescriptorRange optionDescriptors()
-        { return SaneOptionDescriptorRange(c); }
+    @property SaneOptionRange options() { return SaneOptionRange(c); }
 }
 
 SaneHandle saneOpen(string name)
@@ -130,7 +130,7 @@ struct CStringRange(CStrType)
 {
     private const(CStrType)[] source = null;
 
-    @property bool empty() const { return source !is null && source.length > 0; }
+    @property bool empty() const { return source is null || source.length == 0; }
     void popFront() { if ( !empty ) source = source[1..$]; }
     void popBack()  { if ( !empty ) source = source[0..$-1]; }
     @property string front() const { return to!string(source[0]); }
@@ -249,7 +249,7 @@ struct SaneOption
     // Very stub like for now.
     private void handleConsequences(SANE_Info consequences)
     {
-        writefln("handleConsequences(%s): stub",consequences);
+        writefln("handleConsequences(%s): stub",sane.toString(consequences));
     }
 
     private void verifyGettability(SANE_Int typeToCheck)()
@@ -276,13 +276,13 @@ struct SaneOption
     @property auto asInt()    { return getter!(SANE_Int,   SANE_TYPE_INT)();  }
     @property auto asFixed()  { return getter!(SANE_Fixed, SANE_TYPE_FIXED)(); }
 
-    @property char[] asString()
+    @property auto asString()
     {
         verifyGettability!SANE_TYPE_STRING();
         char[] buf = new char[size];
         saneThrowOnError(sane_control_option(
             handle, index, SANE_ACTION_GET_VALUE, buf.ptr, null));
-        return buf[0..strlen(buf.ptr)];
+        return assumeUnique(buf[0..strlen(buf.ptr)]);
     }
     // It is not possible to "get" a SANE_TYPE_BUTTON
     // It is not possible to "get" a SANE_TYPE_GROUP
@@ -314,7 +314,7 @@ struct SaneOption
         saneThrowOnError(sane_control_option(
             handle, index, SANE_ACTION_SET_VALUE, mutableVal.ptr, &consequences));
         handleConsequences(consequences);
-        return mutableVal[0..strlen(mutableVal.ptr)];
+        return assumeUnique(mutableVal[0..strlen(mutableVal.ptr)]);
     }
 
     void pushButton()
@@ -328,6 +328,42 @@ struct SaneOption
 
     // TODO: SANE_TYPE_GROUP interfacing?
 
+    /+
+    private string constraintToString()
+    {
+        final switch ( constraintType )
+        {
+            case SANE_CONSTRAINT_NONE: return "";
+            case SANE_CONSTRAINT_STRING_LIST:
+        }
+    }+/
+
+    private string stringWithConstraintToString()
+    {
+        if ( constraintType == SANE_CONSTRAINT_NONE )
+            return asString;
+
+        if ( constraintType == SANE_CONSTRAINT_STRING_LIST )
+        {
+            string result = "";
+            string selected = asString;
+            foreach ( possibility; constraintStringList )
+            {
+                if ( selected == possibility )
+                    result ~= "[" ~ selected ~ "],";
+                else
+                    result ~= possibility~",";
+            }
+
+            if ( result.length < 1 )
+                return "["~selected~"]?";
+            else
+                return result[0..$-1];
+        }
+
+        assert(0);
+    }
+
     string toString()
     {
         if ( cap & SANE_CAP_INACTIVE )
@@ -337,8 +373,8 @@ struct SaneOption
         {
             case SANE_TYPE_BOOL:   return to!string(asBool);
             case SANE_TYPE_INT:    return to!string(asInt);
-            case SANE_TYPE_FIXED:  return to!string(asFixed);
-            case SANE_TYPE_STRING: return asString.to!string;
+            case SANE_TYPE_FIXED:  return fixedToString(asFixed);
+            case SANE_TYPE_STRING: return stringWithConstraintToString();
             case SANE_TYPE_BUTTON: return "BUTTON";
             case SANE_TYPE_GROUP:  return "GROUP";
         }
@@ -360,7 +396,7 @@ private SaneOption getOption(SANE_Handle h, SANE_Int index)
     return SaneOption(cStyleOptionDesc, h, index);
 }
 
-struct SaneOptionDescriptorRange
+struct SaneOptionRange
 {
     private SANE_Handle handle = null;
     private SANE_Int nOptions = 0;
@@ -407,4 +443,4 @@ struct SaneOptionDescriptorRange
     }
 }
 
-static assert(isRandomAccessRange!(SaneOptionDescriptorRange));
+static assert(isRandomAccessRange!(SaneOptionRange));
