@@ -11,7 +11,10 @@ class TextTable
 {
     private string[]   headers;
     private size_t[]   sizes;
+    private int[]      wrapLimits;
     private Appender!(string[][]) cells;
+
+    int maxLineLength = 0;
 
     public string columnSep = "|";
     public string headerSep = "-";
@@ -33,7 +36,13 @@ class TextTable
         foreach( i, column; contents )
             sizes[i] = max(sizes[i], column.length);
     }
-
+/+
+    void columnWrap(int[] wrapLimits)
+    {
+        assert(wrapLimits.length == headers.length);
+        this.wrapLimits = wrapLimits;
+    }
++/
     auto insertf(T...)(string fmtString, T columnVals)
     {
         struct TTFormattedInserter(size_t colNumber)
@@ -88,7 +97,10 @@ class TextTable
     {
         assert(contents !is null);
         assert(contents.length == headers.length);
-        return zip(contents,sizes).map!(a => addPadding(a[0], a[1]+1, pad)).joiner(sep).array.to!string;
+        auto line = zip(contents,sizes).map!(a => addPadding(a[0], a[1]+1, pad)).joiner(sep).array.to!string;
+        if ( maxLineLength > 0 && line.length > maxLineLength )
+            line = line[0..maxLineLength];
+        return line;
     }
 
     void printByLines( void delegate(string) linePrinter )

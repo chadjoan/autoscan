@@ -30,6 +30,67 @@ mixin template dequalifyEnum(theEnum) if (is(theEnum == enum))
     mixin dequalifyEnumMembers!(theEnum, __traits(allMembers, theEnum));
 }
 
+pure nothrow string generateEnumToString(theEnum)() if (is(theEnum == enum))
+{
+    string result =
+        "string toString("~theEnum.stringof~" val)\n"~
+        "{\n"~
+        "    final switch(val)\n"~
+        "    {\n";
+
+    foreach( member; __traits(allMembers, theEnum) )
+    {
+        result ~=
+        "        case "~theEnum.stringof~"."~member~": return \""~theEnum.stringof~"."~member~"\";\n";
+    }
+
+    result ~=
+        "    }\n"~
+        "    assert(0);\n"~
+        "}\n";
+    return result;
+}
+
+mixin template toStringifyEnum(theEnum) if (is(theEnum == enum))
+{
+    mixin(generateEnumToString!theEnum());
+}
+
+pure nothrow string generateFlagsToString(theEnum)() if (is(theEnum == enum))
+{
+    string result =
+`import std.exception : assumeUnique;
+string toString(`~theEnum.stringof~` val)
+{
+    char[] result = "`~theEnum.stringof~`{".dup;
+`;
+
+    foreach( member; __traits(allMembers, theEnum) )
+    {
+        result ~=
+`    if ( val & `~theEnum.stringof~`.`~member~` )
+        result ~= "`~member~`|";
+`;
+    }
+
+    result ~=
+`
+    if ( result[$-1] == '|' )
+        result[$-1] = '}';
+    else
+        result ~= "}";
+
+    return assumeUnique(result);
+}
+`;
+
+    return result;
+}
+
+mixin template toStringifyFlags(theEnum) if (is(theEnum == enum))
+{
+    mixin(generateFlagsToString!theEnum());
+}
 
 /*
  * SANE types and defines
@@ -41,7 +102,7 @@ alias SANE_Word  SANE_Bool;
 alias SANE_Word  SANE_Int;
 alias char  SANE_Char;
 alias SANE_Char* SANE_String;
-alias const SANE_Char* SANE_String_Const;
+alias const(SANE_Char)* SANE_String_Const;
 alias void* SANE_Handle;
 alias SANE_Word SANE_Fixed;
 
@@ -68,6 +129,7 @@ pure nothrow SANE_Fixed SANE_FIX(T)(T v) { return v * (1 << SANE_FIXED_SCALE_SHI
 pure nothrow double SANE_UNFIX(SANE_Fixed v) { return (cast(double)v) / (1 << SANE_FIXED_SCALE_SHIFT); }
 
 mixin dequalifyEnum!SANE_Status;
+mixin toStringifyEnum!SANE_Status;
 enum SANE_Status
 {
     SANE_STATUS_GOOD = 0,       /* everything A-OK */
@@ -85,6 +147,7 @@ enum SANE_Status
 }
 
 mixin dequalifyEnum!SANE_Value_Type;
+mixin toStringifyEnum!SANE_Value_Type;
 enum SANE_Value_Type
 {
     SANE_TYPE_BOOL = 0,
@@ -96,6 +159,7 @@ enum SANE_Value_Type
 }
 
 mixin dequalifyEnum!SANE_Unit;
+mixin toStringifyEnum!SANE_Unit;
 enum SANE_Unit
 {
     SANE_UNIT_NONE = 0,		/* the value is unit-less (e.g., # of scans) */
@@ -115,22 +179,35 @@ struct SANE_Device
     SANE_String_Const type;	/* device type (e.g., "flatbed scanner") */
 }
 
-enum SANE_Int SANE_CAP_SOFT_SELECT = (1 << 0);
-enum SANE_Int SANE_CAP_HARD_SELECT = (1 << 1);
-enum SANE_Int SANE_CAP_SOFT_DETECT = (1 << 2);
-enum SANE_Int SANE_CAP_EMULATED    = (1 << 3);
-enum SANE_Int SANE_CAP_AUTOMATIC   = (1 << 4);
-enum SANE_Int SANE_CAP_INACTIVE    = (1 << 5);
-enum SANE_Int SANE_CAP_ADVANCED    = (1 << 6);
+mixin dequalifyEnum!SANE_Capability;
+mixin toStringifyFlags!SANE_Capability;
+enum SANE_Capability : SANE_Int
+{
+    SANE_CAP_SOFT_SELECT = (1 << 0),
+    SANE_CAP_HARD_SELECT = (1 << 1),
+    SANE_CAP_SOFT_DETECT = (1 << 2),
+    SANE_CAP_EMULATED    = (1 << 3),
+    SANE_CAP_AUTOMATIC   = (1 << 4),
+    SANE_CAP_INACTIVE    = (1 << 5),
+    SANE_CAP_ADVANCED    = (1 << 6),
+}
+
+pragma(msg,generateFlagsToString!SANE_Capability());
 
 pure nothrow SANE_Bool SANE_OPTION_IS_ACTIVE(SANE_Int cap)   { return (cap & SANE_CAP_INACTIVE) == 0; }
 pure nothrow SANE_Bool SANE_OPTION_IS_SETTABLE(SANE_Int cap) { return (cap & SANE_CAP_SOFT_SELECT) != 0; }
 
-enum SANE_INFO_INEXACT        = (1 << 0);
-enum SANE_INFO_RELOAD_OPTIONS = (1 << 1);
-enum SANE_INFO_RELOAD_PARAMS  = (1 << 2);
+mixin dequalifyEnum!SANE_Info;
+mixin toStringifyFlags!SANE_Info;
+enum SANE_Info : SANE_Int
+{
+    SANE_INFO_INEXACT        = (1 << 0),
+    SANE_INFO_RELOAD_OPTIONS = (1 << 1),
+    SANE_INFO_RELOAD_PARAMS  = (1 << 2),
+}
 
 mixin dequalifyEnum!SANE_Constraint_Type;
+mixin toStringifyEnum!SANE_Constraint_Type;
 enum SANE_Constraint_Type
 {
     SANE_CONSTRAINT_NONE = 0,
@@ -154,20 +231,21 @@ struct SANE_Option_Descriptor
     SANE_Value_Type type;	/* how are values interpreted? */
     SANE_Unit unit;		/* what is the (physical) unit? */
     SANE_Int size;
-    SANE_Int cap;		/* capabilities */
+    SANE_Capability cap;		/* capabilities */
 
     SANE_Constraint_Type constraint_type;
     union constraint_t
     {
-        const SANE_String_Const *string_list;	/* NULL-terminated list */
-        const SANE_Word *word_list;	/* first element is list-length */
-        const SANE_Range *range;
+        const(SANE_String_Const)* string_list;	/* NULL-terminated list */
+        const(SANE_Word)* word_list;	/* first element is list-length */
+        const(SANE_Range)* range;
     }
     constraint_t constraint;
 }
 
 
 mixin dequalifyEnum!SANE_Action;
+mixin toStringifyEnum!SANE_Action;
 enum SANE_Action
 {
     SANE_ACTION_GET_VALUE = 0,
@@ -176,6 +254,7 @@ enum SANE_Action
 }
 
 mixin dequalifyEnum!SANE_Frame;
+mixin toStringifyEnum!SANE_Frame;
 enum SANE_Frame
 {
     SANE_FRAME_GRAY = 0, /* band covering human visual range */
@@ -242,7 +321,7 @@ extern(C) const(SANE_Option_Descriptor*)
   sane_get_option_descriptor (SANE_Handle handle, SANE_Int option);
 extern(C) SANE_Status sane_control_option (SANE_Handle handle, SANE_Int option,
 					SANE_Action action, void *value,
-					SANE_Int * info);
+					SANE_Info * info);
 extern(C) SANE_Status sane_get_parameters (SANE_Handle handle,
 					SANE_Parameters * params);
 extern(C) SANE_Status sane_start (SANE_Handle handle);
