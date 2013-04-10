@@ -251,11 +251,17 @@ pure nothrow string toMessage(HPDF_STATUS status)
     assert(0);
 }
 
-class HaruException : Exception
+class HpdfException : Exception
 {
     this(HPDF_STATUS status)
     {
         super(format("%s (%04X): %s", .toString(status), status, .toMessage(status) ));
     }
+}
+
+void throwOnError(HPDF_STATUS status)
+{
+    if ( status )
+        throw new HpdfException(status);
 }
 

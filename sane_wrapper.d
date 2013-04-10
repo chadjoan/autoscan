@@ -444,3 +444,40 @@ struct SaneOptionRange
 }
 
 static assert(isRandomAccessRange!(SaneOptionRange));
+
+void saneStart(SaneHandle handle)
+{
+    saneThrowOnError(sane_start(handle.c));
+}
+
+void saneCancel(SaneHandle handle)
+{
+    sane_cancel(handle.c);
+}
+
+struct SaneParameters
+{
+    SANE_Parameters c;
+
+    @property pure nothrow auto format()        const { return c.format; }
+    @property pure nothrow auto lastFrame()     const { return c.last_frame; }
+    @property pure nothrow auto bytesPerLine()  const { return c.bytes_per_line; }
+    @property pure nothrow auto pixelsPerLine() const { return c.pixels_per_line; }
+    @property pure nothrow auto lines()         const { return c.lines; }
+    @property pure nothrow auto depth()         const { return c.depth; }
+}
+
+void saneGetParameters(SaneHandle handle, SaneParameters* params)
+{
+    saneThrowOnError(sane_get_parameters(handle.c, &params.c));
+}
+
+bool saneRead(SaneHandle handle, SANE_Byte* buf, SANE_Int maxlen, SANE_Int* len)
+{
+    auto status = sane_read (handle.c, buf, maxlen, len);
+    if ( status == SANE_STATUS_EOF )
+        return false;
+    saneThrowOnError(status);
+    return true;
+
+}
