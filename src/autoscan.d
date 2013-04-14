@@ -1,6 +1,6 @@
 import sane.sane;
 import sane.sane_test;
-import sane.sane_wrapper;
+import sane.abstraction;
 
 import haru.hpdf;
 

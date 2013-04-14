@@ -5,7 +5,7 @@ Convenience wrapper for SANE API functions.
 These allow the SANE API to be used in a manner that is more nature to D by
 providing things likes exception handling, ranges, and length-delimited strings.
 +/
-module sane.sane_wrapper;
+module sane.abstraction;
 
 import sane.sane;
 import std.conv;
