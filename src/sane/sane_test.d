@@ -1,4 +1,6 @@
-import sane;
+module sane.sane_test;
+
+import sane.sane;
 import std.stdio;
 
 extern(C) extern __gshared uint* sane_reflection_vals;

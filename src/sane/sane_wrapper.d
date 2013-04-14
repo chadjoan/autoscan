@@ -5,9 +5,9 @@ Convenience wrapper for SANE API functions.
 These allow the SANE API to be used in a manner that is more nature to D by
 providing things likes exception handling, ranges, and length-delimited strings.
 +/
-module sane_wrapper;
+module sane.sane_wrapper;
 
-import sane;
+import sane.sane;
 import std.conv;
 import std.string;
 import std.traits;
@@ -163,9 +163,9 @@ static assert(isRandomAccessRange!(CStringRange!SANE_String_Const));
 
 enum SaneConsequences
 {
-    SANE_INFO_INEXACT        = sane.SANE_INFO_INEXACT,
-    SANE_INFO_RELOAD_OPTIONS = sane.SANE_INFO_RELOAD_OPTIONS,
-    SANE_INFO_RELOAD_PARAMS  = sane.SANE_INFO_RELOAD_PARAMS,
+    SANE_INFO_INEXACT        = sane.sane.SANE_INFO_INEXACT,
+    SANE_INFO_RELOAD_OPTIONS = sane.sane.SANE_INFO_RELOAD_OPTIONS,
+    SANE_INFO_RELOAD_PARAMS  = sane.sane.SANE_INFO_RELOAD_PARAMS,
 }
 
 /+
@@ -249,7 +249,7 @@ struct SaneOption
     // Very stub like for now.
     private void handleConsequences(SANE_Info consequences)
     {
-        writefln("handleConsequences(%s): stub",sane.toString(consequences));
+        writefln("handleConsequences(%s): stub",.toString(consequences));
     }
 
     private void verifyGettability(SANE_Int typeToCheck)()

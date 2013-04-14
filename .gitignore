@@ -1,3 +1,5 @@
-autoscan
+bin/*
 *.pdf
 *.o
+test/*
+!test/.gitkeep

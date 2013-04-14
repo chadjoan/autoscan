@@ -16,6 +16,8 @@
 
    D binding translated by Chad Joan*/
 
+module sane.sane;
+
 import enum_enhancers;
 
 /*
