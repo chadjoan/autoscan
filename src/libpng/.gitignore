@@ -1,0 +1,11 @@
+bin/*
+c_obj/*
+d_obj/*
+lib/*
+
+!bin/.gitkeep
+!c_obj/.gitkeep
+!d_obj/.gitkeep
+!lib/.gitkeep
+
+*.png
