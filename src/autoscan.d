@@ -3,10 +3,12 @@ import sane.sane_test;
 import sane.abstraction;
 
 import haru.hpdf;
+import libpng.png;
 
 import text_table;
 
 import std.stdio;
+import std.string;
 import std.conv;
 import std.exception;
 import std.process : getenv;
@@ -14,6 +16,8 @@ import std.process : getenv;
 //import core.stdc.stdio;
 import core.sys.posix.unistd;
 import core.sys.posix.sys.ioctl;
+
+
 
 
 int main(string[] args)
@@ -129,8 +133,10 @@ int main(string[] args)
         width = params.pixelsPerLine;
         writefln("Pixel data received.");
 
-        assert(params.format == SANE_FRAME_RGB); // HACK: So the PDF can use it later on.
+        assert(params.format == SANE_FRAME_RGB); // HACK: So the PDF/png can use it later on.
     }
+
+    saveToPngRGB(scanData, width, height, "test.png");
 
     ubyte[] pixels = [
     0x00,0xff,0x00,   0x00,0x00,0x00,   0x00,0xff,0x00,   0x00,0x00,0x00,   0xff,0x00,0x00,   0x00,0x00,0x00,
@@ -140,7 +146,7 @@ int main(string[] args)
     ];
 
 
-
+/+
     auto pdf = HPDF_New(null,null);
     if ( !pdf )
         throw new Exception("Couldn't create pdf.");
@@ -238,6 +244,71 @@ HPDF_Page_DrawImage  (HPDF_Page    page,
 +/
 
     throwOnError(HPDF_SaveToFile(pdf, "test.pdf"));
-
++/
     return 0;
+}
+
+import core.sys.posix.stdio; // For FILE* and related funcs.
+import etc.c.zlib; // Z_BEST_COMPRESSION
+
+alias core.sys.posix.stdio.fopen fopen;
+
+void saveToPngRGB( ubyte[] pixels, int width, int height, string fileName )
+{
+
+    png_structp  png_ptr;
+    png_infop  info_ptr;
+
+    // Allocate the png_ptr and info_ptr because
+    //   they are used by everything in libpng.
+    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, null, null, null);
+    if (!png_ptr)
+        throw new Exception("png_create_write_struct failed.");
+
+    // info_ptr holds a bunch of header information for the png.
+    info_ptr = png_create_info_struct(png_ptr);
+    if (!info_ptr) {
+        png_destroy_write_struct(&png_ptr, null);
+        throw new Exception("png_create_info_struct failed.");
+    }
+
+    // setjmp is unneeded.  If anything goes wrong, an exception is thrown.
+    // We can make sure resource cleanup happens by using scope(exit).
+    scope(exit) png_destroy_write_struct(&png_ptr, &info_ptr);
+
+    // Open a file for [w]riting in [b]inary mode.
+    FILE *fp = fopen(toStringz(fileName), "wb");
+    if (!fp)
+        throw new Exception(format("Couldn't open file %s for writing.",fileName));
+    scope(exit) fclose(fp); // fp gets closed, even if an exception happens.
+
+    // We have an open file, now hand it off to libpng.
+    png_init_io(png_ptr, fp);
+
+    // Remember why we do this ;)
+    png_set_compression_level(png_ptr, Z_BEST_COMPRESSION);
+
+    // This informs libpng about the basic parameters of our image.
+    int bitDepth = 8; /* AKA sample_depth */
+    png_set_IHDR(png_ptr, info_ptr, width, height, bitDepth,
+        PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
+        PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+
+    // When you're done writing chunks into the header, you call this.
+    png_write_info(png_ptr, info_ptr);
+
+    // Write the pixel data into the png.
+    // We'll do this one row at a time so that we don't have to allocate an
+    //   array of pointers to the beginning of every row.
+    for ( int i = 0; i < width*height; i += width )
+        png_write_row(png_ptr, cast(ubyte*)(pixels.ptr) + i*3);
+
+    // Call png_write_end when done with pixel data.
+    // The second parameter could be another info struct with more chunks.
+    // In this case we have no more chunks, so passing it null is sufficient.
+    png_write_end(png_ptr, null);
+
+    // We're done.  All of the cleanup and deallocation will be handled by
+    //   the scope statements we used earlier.
+    writefln("Wrote %s", fileName);
 }
