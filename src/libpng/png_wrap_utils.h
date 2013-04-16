@@ -3,7 +3,7 @@
 #define PNG_WRAP_UTILS_INCLUDED
 #include <png.h>
 
-#include "png_struct.h"
+#include "types.h"
 
 /* Set when no errors occur on the C side of things for libpng. */
 #define PNG_NSJ_ERROR_NONE       0

@@ -1,6 +1,6 @@
 
 #include <png.h>
-#include <stdio.h>
+#include <string.h>
 
 #include "png_wrap_utils.h"
 
@@ -27,12 +27,14 @@ static d_png_structp png_nsg_create_d_context(
     if ( png_ptr == NULL )
         return NULL;
 
-    d_png_struct *d_png_ptr = png_malloc(png_ptr, sizeof(d_png_structp));
+    d_png_struct *d_png_ptr = png_malloc(png_ptr, sizeof(d_png_struct));
     if ( d_png_ptr == NULL )
     {
         destroy_fn(&png_ptr);
         return NULL;
     }
+
+    memset(&d_png_ptr->d_context, 0, sizeof(d_png_ptr->d_context));
 
     png_set_error_fn(png_ptr, d_png_ptr, &png_nsj_error_handler, &png_nsj_warn_handler);
 

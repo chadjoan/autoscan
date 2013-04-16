@@ -17,6 +17,16 @@ void png_nsj_clear_errors(d_png_glue_struct *d_context)
     d_context->error_type = PNG_NSJ_ERROR_NONE;
 }
 
+static void png_nsj_err_and_exit(png_const_charp err_msg)
+{
+    if ( err_msg != NULL )
+        fprintf(stderr, "libpng error: %s\n", err_msg);
+    else
+        fprintf(stderr, "libpng error: fatal error with no message given.\n");
+
+    exit(EXIT_FAILURE);
+}
+
 void png_nsj_error_handler(png_structp png_ptr, png_const_charp err_msg)
 {
     if ( png_ptr != NULL )
@@ -32,7 +42,11 @@ void png_nsj_error_handler(png_structp png_ptr, png_const_charp err_msg)
             if ( d_context->secondary_error_fn != NULL )
                 d_context->secondary_error_fn(png_ptr, err_msg);
 
-            longjmp(*d_context->d_jmp_buf_ptr,1);
+            if ( d_context->jump_ready )
+                longjmp(d_context->d_jmp_buf,1);
+
+            fprintf(stderr, "libpng error handler for D: Last entry to libpng didn't setjmp. Can't longjmp.\n");
+            png_nsj_err_and_exit(err_msg);
         }
         else
         {
@@ -42,12 +56,8 @@ void png_nsj_error_handler(png_structp png_ptr, png_const_charp err_msg)
     }
     else
     {
-        if ( err_msg != NULL )
-            fprintf(stderr, "libpng error: %s\n", err_msg);
-        else
-            fprintf(stderr, "libpng error: fatal error with no message given.\n");
-
-        exit(EXIT_FAILURE);
+        fprintf(stderr, "libpng error handler for D: png_ptr is NULL. Can't longjmp.\n");
+        png_nsj_err_and_exit(err_msg);
     }
 }
 

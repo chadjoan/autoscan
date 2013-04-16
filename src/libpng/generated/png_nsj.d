@@ -1,7 +1,6 @@
 module libpng.generated.png_nsj;
 import std.c.time;
 import libpng.types;
-import libpng.png_struct;
 import libpng.png_wrap_utils;
 
 /* pnglibconf.h - library build configuration */

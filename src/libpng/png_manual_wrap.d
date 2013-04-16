@@ -1,7 +1,6 @@
 
 module libpng.png_manual_wrap;
 
-import libpng.png_struct;
 import libpng.types;
 import libpng.constants;
 import libpng.generated.png_nsj;

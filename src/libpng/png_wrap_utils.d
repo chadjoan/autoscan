@@ -2,7 +2,6 @@ module libpng.png_wrap_utils;
 
 import std.conv;
 
-import libpng.png_struct;
 import libpng.types;
 
 enum
@@ -28,13 +27,14 @@ extern(C) void png_nsj_clear_errors(d_png_glue_struct *d_context);
 
 extern(C) void png_nsj_error_handler(png_structp png_ptr, png_const_charp err_msg);
 
-class PngException : Exception { this(string msg) { super(msg); } }
-class PngFunctionNotImpl : Exception { this(string msg) { super(msg); } }
-
-void png_nsj_check_errors( const d_png_glue_struct *d_context )
+void png_nsj_check_errors( d_png_glue_struct *d_context )
 {
     if ( d_context is null )
         return;
+
+    // Clear this so that subsequent calls into libpng that don't propertly
+    //   setjmp won't cause it to longjmp to the discarded stack frame.
+    d_context.jump_ready = 0;
 
     switch( d_context.error_type )
     {

@@ -76,17 +76,17 @@ string rtRegex(string name, string regex, string flags)
 }
 
 // Create static regexes at compile-time, which contains fast native code.
-enum rexComments = ctRegex!(cCommentMultiLine~`+`,"sg");
-enum rexUndefs = ctRegex!(`#\s*undef\s+[A-Za-z0-9_]+`,"sg");
+mixin(rtRegex("rexComments",cCommentMultiLine~`+`,"sg"));
+mixin(rtRegex("rexUndefs", `#\s*undef\s+[A-Za-z0-9_]+`,"sg"));
 mixin(rtRegex("rexDefines",`#\s*define\s+[A-Za-z0-9_]+`~cPreProcMultiLine,"sg"));
 mixin(rtRegex("rexAllPreProc",`#`~cPreProcMultiLine,"sg"));
 
 // Past this point, I gave up on being comment-correct.
 // These regexen expect comments to already be stripped from the file.
 mixin(rtRegex("rexStructs",`\bstruct\s+([A-Za-z0-9_]+)\s+`~nestedRegex(`\{`,`\}`,`[^\{\}]*`,5)~`\s+;?`,"sg"));
-enum rexTypedefs = ctRegex!(`\btypedef\s+.*?;`,"sg");
+mixin(rtRegex("rexTypedefs",`\btypedef\s+.*?;`,"sg"));
 
-enum rexIfDefCpp = ctRegex!(`#ifdef\s+__cplusplus\s+((?:extern\s*"C"\s*\{)|\})\s*#endif`,"sg");
+mixin(rtRegex("rexIfDefCpp",`#ifdef\s+__cplusplus\s+((?:extern\s*"C"\s*\{)|\})\s*#endif`,"sg"));
 
 mixin(rtRegex("rexPngFunctionMacro",`\bPNG_FUNCTION\s*`~nestedRegex(`\(`,`\)`,`[^\(\)]*`,5)~`\s*;`,"sg"));
 
@@ -214,6 +214,10 @@ int main( string[] args )
         return 0;
     }
 
+
+    writeln("Wrapper generator running.");
+    writefln("Target directory: %s", args[1]);
+
     auto pngh = cast(string)std.file.read(buildPath(args[1],"png.h"));
     int removeCount = 0;
 
@@ -267,7 +271,7 @@ int main( string[] args )
 
     // Remove the PNG_EXPORT_LAST_ORDINAL macro because it is unnecessary for D.
     pngh = std.regex.replace!(regexRemoveAndPrint)(pngh,
-        ctRegex!(`\bPNG_EXPORT_LAST_ORDINAL\s*\(\s*[0-9]+\s*\)\s*;?`,"sg"));
+        regex(`\bPNG_EXPORT_LAST_ORDINAL\s*\(\s*[0-9]+\s*\)\s*;?`,"sg"));
 
     // Remove all preprocessor statements.
     // This gets its own output because at least one output uses the #ifdef
@@ -283,10 +287,10 @@ int main( string[] args )
     pnglibconfd = std.regex.replace(pnglibconfd, ctRegex!(`#.*PNGLCONF_H.*$`,"mg"), "");
     pnglibconfd = std.regex.replace(pnglibconfd, ctRegex!(`#\s*endif`,"mg"), ""); // Incase the one above didn't get it.
     pnglibconfd = std.regex.replace(pnglibconfd,
-        ctRegex!(`^\s*#define\s+([0-9A-Za-z_]+)\s*$`,"mg"),
+        regex(`^\s*#define\s+([0-9A-Za-z_]+)\s*$`,"mg"),
         "\nenum $1 = 1;");
     pnglibconfd = std.regex.replace(pnglibconfd,
-        ctRegex!(`^\s*#define\s+([0-9A-Za-z_]+)(\s+)([0-9A-Za-z_+-]+)\s*$`,"mg"),
+        regex(`^\s*#define\s+([0-9A-Za-z_]+)(\s+)([0-9A-Za-z_+-]+)\s*$`,"mg"),
         "\nenum $1$2= $3;");
 
     // ------------------- Substitutions ------------------------
@@ -313,7 +317,6 @@ int main( string[] args )
         "module "~dThisModule~";\n"~
         "import std.c.time;\n"~
         "import "~dOtherModulePath~"types;\n"~
-        "import "~dOtherModulePath~"png_struct;\n"~
         "import "~dOtherModulePath~"png_wrap_utils;\n"~
         "\n"~
         pnglibconfd~
@@ -497,9 +500,8 @@ string wrapConditionalSetjmpC(string returnType, string funcName, string funcArg
         "    png_nsj_clear_errors(&png_ptr->d_context);\n"~
         "\n"~
         "#   if PNG_NSJ_%s_IS_DEFINED == 1\n"~
-        "        jmp_buf d_jmp_buf;\n"~
-        "        png_ptr->d_context.d_jmp_buf_ptr = &d_jmp_buf;\n"~
-        "        if ( setjmp(d_jmp_buf) ) {\n"~
+        "        png_ptr->d_context.jump_ready = 1;\n"~ /* Cleared in png_nsj_check_errors in png_wrap_utils.d */
+        "        if ( setjmp(png_ptr->d_context.d_jmp_buf) ) {\n"~
         "            %s;\n"~
         "        }\n"~
         "        %s;\n"~

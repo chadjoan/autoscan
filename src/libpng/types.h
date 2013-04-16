@@ -21,12 +21,22 @@ typedef struct d_png_glue_struct
     void (*secondary_error_fn)(png_structp png_ptr, png_const_charp err_msg);
     void (*secondary_warn_fn)(png_structp png_ptr, png_const_charp err_msg);
 
-    /* NOTE: Allocating the entire jmp_buf here resulted in strange stack
-     * corruption on the author's system as soon as setjmp was called on it.
-     * Stack allocating the jmp_buf and then storing a pointer to the stack
-     * allocated jmp_buf in this field seems to have solved the issue.
+    /* Is it safe to jump?
+     * The caller should set this to 1 before setjmp'ing, and then to 0 after
+     * the setjmp is no longer valid.  This safety measure can prevent
+     * longjmp'ing to no-longer-existing stack frames.
+     * Make this pointer-sized so that the layout is predictable for the D side.
      */
-    jmp_buf*    d_jmp_buf_ptr;
+    size_t jump_ready;
+
+    /* It is unwise to make any assumptions about the size of this member.
+     * It might not agree on both sides of the language barrier.
+     * This is fine as long as the C side allocates enough space for it and
+     *   the D side never touches it.
+     * This should also be the last member in the struct.
+     * Anything placed after it may not be offset the same in both languages.
+     */
+    jmp_buf    d_jmp_buf;
 } d_png_glue_struct;
 
 

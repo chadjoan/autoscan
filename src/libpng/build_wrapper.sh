@@ -3,7 +3,7 @@ script_dir=${0%/*}
 set -v
 cd ${script_dir}
 script_dir=$(pwd)
-dmd *.d generated/*.d -I../ -c -od./d_obj
+dmd *.d generated/*.d -I../ -c -od./d_obj -g -debug
 cd c_obj
 gcc ../*.c ../generated/*.c -I../ -c
 cd ${script_dir}
