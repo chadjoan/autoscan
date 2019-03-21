@@ -13,7 +13,6 @@ import std.string;
 import std.traits;
 import std.range;
 import std.stdio;
-import std.c.string;
 import std.exception;
 import core.exception;
 

@@ -599,9 +599,9 @@ alias png_time  *  * png_timepp;
 alias png_unknown_chunk_t png_unknown_chunk;
 struct png_unknown_chunk_t
 {
-    png_byte name[5];
-    png_byte *data;
-    png_size_t size;
+    png_byte[5] name;
+    png_byte    *data;
+    png_size_t  size;
 
     /* libpng-using applications should NOT directly modify this byte. */
     png_byte location; /* mode of operation at read time */

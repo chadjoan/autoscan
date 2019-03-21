@@ -8,6 +8,7 @@ pure nothrow string generateEnumAliases(theEnum)()  if (is(theEnum == enum))
     return result;
 }
 
+/+ TODO: name this something like "expandEnumAliases" +/
 mixin template dequalifyEnum(theEnum) if (is(theEnum == enum))
 {
     mixin(generateEnumAliases!theEnum());
