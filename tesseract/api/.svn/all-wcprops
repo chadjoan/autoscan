@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 27
+/svn/!svn/ver/834/trunk/api
+END
+capi.h
+K 25
+svn:wc:ra_dav:version-url
+V 34
+/svn/!svn/ver/760/trunk/api/capi.h
+END
+tesseractmain.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svn/!svn/ver/834/trunk/api/tesseractmain.cpp
+END
+apitypes.h
+K 25
+svn:wc:ra_dav:version-url
+V 38
+/svn/!svn/ver/657/trunk/api/apitypes.h
+END
+baseapi.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 39
+/svn/!svn/ver/832/trunk/api/baseapi.cpp
+END
+tesseractmain.h
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svn/!svn/ver/694/trunk/api/tesseractmain.h
+END
+Makefile.am
+K 25
+svn:wc:ra_dav:version-url
+V 39
+/svn/!svn/ver/759/trunk/api/Makefile.am
+END
+baseapi.h
+K 25
+svn:wc:ra_dav:version-url
+V 37
+/svn/!svn/ver/814/trunk/api/baseapi.h
+END
+capi.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 36
+/svn/!svn/ver/760/trunk/api/capi.cpp
+END

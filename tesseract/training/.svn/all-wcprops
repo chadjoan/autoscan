@@ -1,0 +1,101 @@
+K 25
+svn:wc:ra_dav:version-url
+V 32
+/svn/!svn/ver/757/trunk/training
+END
+mftraining.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/757/trunk/training/mftraining.cpp
+END
+shapeclustering.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/!svn/ver/757/trunk/training/shapeclustering.cpp
+END
+unicharset_extractor.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/677/trunk/training/unicharset_extractor.cpp
+END
+tessopt.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/526/trunk/training/tessopt.cpp
+END
+combine_tessdata.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/!svn/ver/526/trunk/training/combine_tessdata.cpp
+END
+tessopt.h
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/!svn/ver/526/trunk/training/tessopt.h
+END
+ambiguous_words.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/!svn/ver/704/trunk/training/ambiguous_words.cpp
+END
+classifier_tester.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/653/trunk/training/classifier_tester.cpp
+END
+mergenf.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/526/trunk/training/mergenf.cpp
+END
+commontraining.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/653/trunk/training/commontraining.cpp
+END
+Makefile.am
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/709/trunk/training/Makefile.am
+END
+mergenf.h
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/!svn/ver/526/trunk/training/mergenf.h
+END
+commontraining.h
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/653/trunk/training/commontraining.h
+END
+wordlist2dawg.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/653/trunk/training/wordlist2dawg.cpp
+END
+dawg2wordlist.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/704/trunk/training/dawg2wordlist.cpp
+END
+cntraining.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/674/trunk/training/cntraining.cpp
+END
