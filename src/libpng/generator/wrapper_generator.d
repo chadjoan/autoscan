@@ -336,13 +336,6 @@ int main( string[] args )
     pnglibconfd = std.regex.replace(pnglibconfd,
         regex(`^\s*#define\s+([0-9A-Za-z_]+)\s*$`,"mg"),
         "\nenum $1 = 1;");
-    /+pnglibconfd = std.regex.replace(pnglibconfd,
-        regex(`^\s*#define\s+([0-9A-Za-z_]+)(\s+)((:?\(\s*)?[+-]?(:?(:?0x[0-9A-Fa-f]+)|(:?[0-9]+))(:?\s*\))?)\s*$`,"mg"),
-        "\nenum $1$2= $3;");
-    pnglibconfd = std.regex.replace(pnglibconfd,
-        regex(`^\s*#define\s+([0-9A-Za-z_]+)(\s+)([_A-Za-z][_A-Za-z0-9]*)\s*$`,"mg"),
-        "\nalias $1$2= $3;");
-    +/
 
     bool[string] macroDefs;
     auto macroDefineReplacer = (Captures!(typeof(pngh)) caps)
@@ -595,7 +588,6 @@ Parameter[] analyzeParams(string funcName, string paramTuple)
     auto paramsMeta = appender!(Parameter[]);
     auto paramsStr = paramTuple;
     paramsStr = paramsStr.removeParens;
-    //int whichParam = 0;
     foreach( param; std.regex.match(paramsStr~",",rexFuncArgs) )
     {
         Parameter meta;
@@ -612,35 +604,9 @@ Parameter[] analyzeParams(string funcName, string paramTuple)
             meta.arrayDims ~= to!uint(arrayDecl);
         }
 
-        //writefln("parameter: %s", param.hit);
-        //writefln("parameter name: %s", paramName);
-        //writefln("parameter type: %s", paramType);
-
-        /+
-        // This wasn't working and probably isn't necessary anymore.
-        if ( paramType.length == 0 )
-        {
-            // Yay!  Corner cases.
-            // They don't always specify parameter names for their parameter types.
-            // This happens, for example, in png_get_current_row_number.
-            paramType = paramName;
-            paramName = format("png_nsj_param%s",whichParam);
-        }
-        +/
-
-        //writefln("param name postproc: %s", paramName);
-        //writefln("param type postproc: %s", paramType);
-
         paramsMeta.put(meta);
-
-        //whichParam++;
     }
 
-    /+
-    // Trim off the last comma.
-    if ( paramNames.length > 2 )
-        paramNames = paramNames[0..$-2];
-    +/
     return paramsMeta.data;
 }
 

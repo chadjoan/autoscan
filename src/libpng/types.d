@@ -6,11 +6,19 @@ public import libpng.png_types;
 class PngException : Exception { this(string msg) { super(msg); } }
 class PngFunctionNotImpl : Exception { this(string msg) { super(msg); } }
 
-/// Cheating: We redefine png_struct to allow D's context to exist alongside
+/// Cheating: We redefine png_structp to allow D's context to exist alongside
 ///   the png_ptr context.  This enables setjmp/longjmp to be wrapped into
 ///   exception handling and to retrieve the error messages when something
 ///   goes wrong.
-/// Used to wrap setjmp/longjmp and retrieve error messages, mostly.
+/// The D call context is used when wrapping setjmp/longjmp and to retrieve
+///   error messages, mostly.
+/// The 'png_struct' definition itself is notably absent. The libpng API
+///   would not allow the caller to stack-allocate or introspect such a thing
+///   anyways, it would have just been a symbol. Given that it would be a pain
+///   to manage the value-semantics of a faux png_struct (ex: if the dCallContext
+///   were allocated in-place such that declaring a png_struct would allocate
+///   space for it), this opportunity to shoot oneself in the foot has been
+///   denied. Copying png_structp structs around should be perfectly safe.
 /// Implementation note: this is known as d_png_structp on the C-side of the
 ///   wrapper.
 struct png_structp
@@ -41,15 +49,9 @@ struct png_const_structp
     alias png_ptr this;
 }
 
-//alias png_struct png_struct_def;
-//alias png_struct png_structp;
-//alias const png_struct* png_const_structp;
-//alias png_structp png_const_structp;
-alias png_structp png_structrp;
-//alias const png_struct* png_const_structrp;
-//alias png_const_struct png_const_structp;
-alias png_const_structp png_const_structrp;
-alias png_structp* png_structpp; // TODO: This... should probably go the other way around, but that might mean defining another png_structp-like thing.  Ugh.
+alias png_structp        png_structrp;
+alias png_const_structp  png_const_structrp;
+alias png_structp*       png_structpp; // TODO: This... should probably go the other way around, but that might mean defining another png_structp-like thing.  Ugh.
 
 struct libpngCallContextForD
 {

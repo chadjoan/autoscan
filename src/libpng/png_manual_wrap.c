@@ -18,10 +18,10 @@ static void d_png_destroy_write(png_structpp png_ptr)
 }
 
 static d_png_structp png_nsj_create_d_context(
-    png_structp png_ptr,
-    png_voidp error_ptr,
-    png_error_ptr error_fn,
-    png_error_ptr warn_fn,
+    png_structp            png_ptr,
+    png_voidp              error_ptr,
+    png_error_ptr          error_fn,
+    png_error_ptr          warn_fn,
     void (*destroy_fn)(png_structpp png_ptr))
 {
     d_png_structp d_png_ptr;

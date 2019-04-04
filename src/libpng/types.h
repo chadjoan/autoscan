@@ -56,10 +56,6 @@ typedef struct d_png_const_structp
 
 } d_png_const_structp;
 
-//typedef libpngCallContextForD*            d_png_structp;
-//typedef d_png_const_struct*               d_png_const_structp;
-//typedef d_png_structp PNG_RESTRICT        d_png_structrp;
-//typedef d_png_const_structp PNG_RESTRICT  d_png_const_structrp;
 typedef d_png_structp        d_png_structrp;
 typedef d_png_const_structp  d_png_const_structrp;
 
