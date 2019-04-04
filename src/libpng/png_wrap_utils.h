@@ -19,9 +19,9 @@
 
 extern const char *png_nsj_fn_not_defined_msg;
 
-void png_nsj_set_missing_fn_err(d_png_glue_struct *d_context);
+void png_nsj_set_missing_fn_err(libpngCallContextForD *dCallContext);
 
-void png_nsj_clear_errors(d_png_glue_struct *d_context);
+void png_nsj_clear_errors(libpngCallContextForD *dCallContext);
 
 void png_nsj_error_handler(png_structp png_ptr, png_const_charp err_msg);
 

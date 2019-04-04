@@ -6,24 +6,52 @@ public import libpng.png_types;
 class PngException : Exception { this(string msg) { super(msg); } }
 class PngFunctionNotImpl : Exception { this(string msg) { super(msg); } }
 
-// Cheating: We redefine png_struct to allow D's context to exist alongside
-//   the png_ptr context.  This enables setjmp/longjmp to be wrapped into
-//   exception handling and to retrieve the error messages when something
-//   goes wrong.
-// Used to wrap setjmp/longjmp and retrieve error messages, mostly.
-struct png_struct
+/// Cheating: We redefine png_struct to allow D's context to exist alongside
+///   the png_ptr context.  This enables setjmp/longjmp to be wrapped into
+///   exception handling and to retrieve the error messages when something
+///   goes wrong.
+/// Used to wrap setjmp/longjmp and retrieve error messages, mostly.
+/// Implementation note: this is known as d_png_structp on the C-side of the
+///   wrapper.
+struct png_structp
 {
-    c_png_struct* png_ptr;
-    d_png_glue_struct d_context;
+    c_png_struct*           png_ptr;
+    libpngCallContextForD*  dCallContext;
+
+    @property png_const_structp toConst()
+    {
+        // As of this writing (dmd 2.085.0, 2019-04-04) it is necessary to
+        // reinterpret the 'this' object in its pointer form instead of
+        // directly, because a direct cast somehow causes this .toConst()
+        // function to call itself repeatedly ad infinitum until the program
+        // segfaults/crashes. I'm not sure why it does that or why this
+        // workaround works, but transiting through pointer-ness does seem to
+        // remove the danger.
+        return *(cast(png_const_structp*)(&this));
+    }
+
+    alias toConst this;
 }
 
-alias png_struct png_struct_def;
-alias png_struct* png_structp;
-//alias const png_struct  * png_const_structp;
-alias png_structp png_const_structp;
-alias png_struct** png_structpp;
+struct png_const_structp
+{
+    const c_png_struct*     png_ptr;
+    libpngCallContextForD*  dCallContext;
 
-struct d_png_glue_struct
+    alias png_ptr this;
+}
+
+//alias png_struct png_struct_def;
+//alias png_struct png_structp;
+//alias const png_struct* png_const_structp;
+//alias png_structp png_const_structp;
+alias png_structp png_structrp;
+//alias const png_struct* png_const_structrp;
+//alias png_const_struct png_const_structp;
+alias png_const_structp png_const_structrp;
+alias png_structp* png_structpp; // TODO: This... should probably go the other way around, but that might mean defining another png_structp-like thing.  Ugh.
+
+struct libpngCallContextForD
 {
     const char *error_msg;
 

@@ -21,28 +21,28 @@ enum
 
 extern extern(C) const(char*) png_nsj_fn_not_defined_msg;
 
-extern(C) void png_nsj_set_missing_fn_err(d_png_glue_struct *d_context);
+extern(C) void png_nsj_set_missing_fn_err(libpngCallContextForD *dCallContext);
 
-extern(C) void png_nsj_clear_errors(d_png_glue_struct *d_context);
+extern(C) void png_nsj_clear_errors(libpngCallContextForD *dCallContext);
 
 extern(C) void png_nsj_error_handler(png_structp png_ptr, png_const_charp err_msg);
 
-void png_nsj_check_errors( d_png_glue_struct *d_context )
+void png_nsj_check_errors( libpngCallContextForD *dCallContext )
 {
-    if ( d_context is null )
+    if ( dCallContext is null )
         return;
 
     // Clear this so that subsequent calls into libpng that don't propertly
     //   setjmp won't cause it to longjmp to the discarded stack frame.
-    d_context.jump_ready = 0;
+    dCallContext.jump_ready = 0;
 
-    switch( d_context.error_type )
+    switch( dCallContext.error_type )
     {
         case PNG_NSJ_ERROR_WARNING: break; // Is this even useful?
         case PNG_NSJ_ERROR_FATAL:
-            throw new PngException(to!string(d_context.error_msg));
+            throw new PngException(to!string(dCallContext.error_msg));
         case PNG_NSJ_ERROR_MISSING_FN:
-            throw new PngFunctionNotImpl(to!string(d_context.error_msg));
+            throw new PngFunctionNotImpl(to!string(dCallContext.error_msg));
         case PNG_NSJ_ERROR_NONE: break;
         default: assert(0);
     }

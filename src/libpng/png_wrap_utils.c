@@ -5,16 +5,16 @@
 
 const char *png_nsj_fn_not_defined_msg = "Attempt to call a function that was not compiled into this libpng.";
 
-void png_nsj_set_missing_fn_err(d_png_glue_struct *d_context)
+void png_nsj_set_missing_fn_err(libpngCallContextForD *dCallContext)
 {
-    d_context->error_msg = png_nsj_fn_not_defined_msg;
-    d_context->error_type = PNG_NSJ_ERROR_MISSING_FN;
+    dCallContext->error_msg = png_nsj_fn_not_defined_msg;
+    dCallContext->error_type = PNG_NSJ_ERROR_MISSING_FN;
 }
 
-void png_nsj_clear_errors(d_png_glue_struct *d_context)
+void png_nsj_clear_errors(libpngCallContextForD *dCallContext)
 {
-    d_context->error_msg = NULL;
-    d_context->error_type = PNG_NSJ_ERROR_NONE;
+    dCallContext->error_msg = NULL;
+    dCallContext->error_type = PNG_NSJ_ERROR_NONE;
 }
 
 static void png_nsj_err_and_exit(png_const_charp err_msg)
@@ -31,19 +31,18 @@ void png_nsj_error_handler(png_structp png_ptr, png_const_charp err_msg)
 {
     if ( png_ptr != NULL )
     {
-        d_png_struct* d_png_ptr = png_get_error_ptr(png_ptr);
+        libpngCallContextForD* dCallContext = png_get_error_ptr(png_ptr);
 
-        if ( d_png_ptr != NULL )
+        if ( dCallContext != NULL )
         {
-            d_png_glue_struct *d_context = &d_png_ptr->d_context;
-            d_context->error_msg = err_msg;
-            d_context->error_type = PNG_NSJ_ERROR_FATAL;
+            dCallContext->error_msg = err_msg;
+            dCallContext->error_type = PNG_NSJ_ERROR_FATAL;
 
-            if ( d_context->secondary_error_fn != NULL )
-                d_context->secondary_error_fn(png_ptr, err_msg);
+            if ( dCallContext->secondary_error_fn != NULL )
+                dCallContext->secondary_error_fn(png_ptr, err_msg);
 
-            if ( d_context->jump_ready )
-                longjmp(d_context->d_jmp_buf,1);
+            if ( dCallContext->jump_ready )
+                longjmp(dCallContext->d_jmp_buf,1);
 
             fprintf(stderr, "libpng error handler for D: Last entry to libpng didn't setjmp. Can't longjmp.\n");
             png_nsj_err_and_exit(err_msg);
@@ -65,10 +64,10 @@ void png_nsj_warn_handler(png_structp png_ptr, png_const_charp warn_msg)
 {
     if ( png_ptr != NULL )
     {
-        d_png_struct* d_png_ptr = png_get_error_ptr(png_ptr);
+        libpngCallContextForD* dCallContext = png_get_error_ptr(png_ptr);
 
-        if ( d_png_ptr != NULL && d_png_ptr->d_context.secondary_warn_fn != NULL )
-            d_png_ptr->d_context.secondary_warn_fn(png_ptr,warn_msg);
+        if ( dCallContext != NULL && dCallContext->secondary_warn_fn != NULL )
+            dCallContext->secondary_warn_fn(png_ptr,warn_msg);
         else
             png_warning(NULL,warn_msg); /* Force it to use the default warning method. */
     }

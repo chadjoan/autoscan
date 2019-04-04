@@ -621,7 +621,8 @@ alias png_info_def png_info;
 alias png_info  * png_infop;
 alias const png_info  * png_const_infop;
 alias png_info  *  * png_infopp;
-
+alias png_info  * png_inforp;
+alias const png_info  * png_const_inforp;
 
 
 /* This is used for the transformation routines, as some of them
@@ -642,6 +643,104 @@ struct png_row_info_struct
 alias png_row_info  * png_row_infop;
 alias png_row_info  *  * png_row_infopp;
 
+/*******************************************************************************
+ * Section 5: SIMPLIFIED API
+ *******************************************************************************
+ *
+ * Please read the documentation in libpng-manual.txt (TODO: write said
+ * documentation) if you don't understand what follows.
+ *
+ * The simplified API hides the details of both libpng and the PNG file format
+ * itself.  It allows PNG files to be read into a very limited number of
+ * in-memory bitmap formats or to be written from the same formats.  If these
+ * formats do not accommodate your needs then you can, and should, use the more
+ * sophisticated APIs above - these support a wide variety of in-memory formats
+ * and a wide variety of sophisticated transformations to those formats as well
+ * as a wide variety of APIs to manipulate ancillary information.
+ *
+ * To read a PNG file using the simplified API:
+ *
+ * 1) Declare a 'png_image' structure (see below) on the stack, set the
+ *    version field to PNG_IMAGE_VERSION and the 'opaque' pointer to NULL
+ *    (this is REQUIRED, your program may crash if you don't do it.)
+ * 2) Call the appropriate png_image_begin_read... function.
+ * 3) Set the png_image 'format' member to the required sample format.
+ * 4) Allocate a buffer for the image and, if required, the color-map.
+ * 5) Call png_image_finish_read to read the image and, if required, the
+ *    color-map into your buffers.
+ *
+ * There are no restrictions on the format of the PNG input itself; all valid
+ * color types, bit depths, and interlace methods are acceptable, and the
+ * input image is transformed as necessary to the requested in-memory format
+ * during the png_image_finish_read() step.  The only caveat is that if you
+ * request a color-mapped image from a PNG that is full-color or makes
+ * complex use of an alpha channel the transformation is extremely lossy and the
+ * result may look terrible.
+ *
+ * To write a PNG file using the simplified API:
+ *
+ * 1) Declare a 'png_image' structure on the stack and memset() it to all zero.
+ * 2) Initialize the members of the structure that describe the image, setting
+ *    the 'format' member to the format of the image samples.
+ * 3) Call the appropriate png_image_write... function with a pointer to the
+ *    image and, if necessary, the color-map to write the PNG data.
+ *
+ * png_image is a structure that describes the in-memory format of an image
+ * when it is being read or defines the in-memory format of an image that you
+ * need to write:
+ */
+struct png_control {};
+alias png_control* png_controlp;
+
+enum PNG_IMAGE_VERSION = 1;
+
+extern(C) struct png_image
+{
+   png_controlp opaque;    /* Initialize to NULL, free with png_image_free */
+   png_uint_32  _version;   /* Set to PNG_IMAGE_VERSION */
+   png_uint_32  width;     /* Image width in pixels (columns) */
+   png_uint_32  height;    /* Image height in pixels (rows) */
+   png_uint_32  format;    /* Image format as defined below */
+   png_uint_32  flags;     /* A bit mask containing informational flags */
+   png_uint_32  colormap_entries;
+                           /* Number of entries in the color-map */
+
+   /* In the event of an error or warning the following field will be set to a
+    * non-zero value and the 'message' field will contain a '\0' terminated
+    * string with the libpng error or warning message.  If both warnings and
+    * an error were encountered, only the error is recorded.  If there
+    * are multiple warnings, only the first one is recorded.
+    *
+    * The upper 30 bits of this value are reserved, the low two bits contain
+    * a value as follows:
+    */
+//#  define PNG_IMAGE_WARNING 1
+//#  define PNG_IMAGE_ERROR 2
+   /*
+    * The result is a two-bit code such that a value more than 1 indicates
+    * a failure in the API just called:
+    *
+    *    0 - no warning or error
+    *    1 - warning
+    *    2 - error
+    *    3 - error preceded by warning
+    */
+//#  define PNG_IMAGE_FAILED(png_cntrl) ((((png_cntrl).warning_or_error)&0x03)>1)
+
+   png_uint_32  warning_or_error;
+
+   //char         message[64];
+   byte[64]     message;
+}
+alias png_image* png_imagep;
+
+enum PNG_IMAGE_WARNING = 1;
+enum PNG_IMAGE_ERROR   = 2;
+
+bool PNG_IMAGE_FAILED(png_imagep png_cntrl) {
+   return (png_cntrl.warning_or_error & 0x03) > 1;
+}
+
 /* The complete definition of png_struct has, as of libpng-1.5.0,
  * been moved into a separate header file that is not accessible to
  * applications.  Read libpng-manual.txt or libpng.3 for more info.
@@ -649,7 +748,7 @@ alias png_row_info  *  * png_row_infopp;
 struct c_png_struct;
 alias c_png_struct* c_png_structp;
 
-// png_struct is defined in libpng/png_struct.d
+// png_struct is defined in libpng/types.d
 
 /* These are the function types for the I/O functions and for the functions
  * that allow the user to override the default I/O functions with his or her

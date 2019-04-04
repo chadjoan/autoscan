@@ -2,7 +2,9 @@
 #ifndef D_PNG_STRUCT_INCLUDED
 #define D_PNG_STRUCT_INCLUDED
 
-typedef struct d_png_glue_struct
+#include <png.h>
+
+typedef struct libpngCallContextForD
 {
     const char *error_msg;
 
@@ -37,18 +39,30 @@ typedef struct d_png_glue_struct
      * Anything placed after it may not be offset the same in both languages.
      */
     jmp_buf    d_jmp_buf;
-} d_png_glue_struct;
+} libpngCallContextForD;
 
 
-typedef struct d_png_struct
+typedef struct d_png_structp
 {
-    png_structp png_ptr;
-    d_png_glue_struct d_context;
+    png_structp            png_ptr;
+    libpngCallContextForD  *dCallContext;
 
-} d_png_struct;
+} d_png_structp;
 
-typedef d_png_struct* d_png_structp;
+typedef struct d_png_const_structp
+{
+    png_const_structp      png_ptr;
+    libpngCallContextForD  *dCallContext;
 
-typedef d_png_struct** d_png_structpp;
+} d_png_const_structp;
+
+//typedef libpngCallContextForD*            d_png_structp;
+//typedef d_png_const_struct*               d_png_const_structp;
+//typedef d_png_structp PNG_RESTRICT        d_png_structrp;
+//typedef d_png_const_structp PNG_RESTRICT  d_png_const_structrp;
+typedef d_png_structp        d_png_structrp;
+typedef d_png_const_structp  d_png_const_structrp;
+
+typedef d_png_structp* d_png_structpp;
 
 #endif

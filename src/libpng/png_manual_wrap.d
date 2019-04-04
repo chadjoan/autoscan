@@ -2,7 +2,6 @@
 module libpng.png_manual_wrap;
 
 import libpng.types;
-import libpng.constants;
 import libpng.generated.png_nsj;
 
 /* Simple signature checking function.  This is the same as calling
@@ -170,6 +169,31 @@ extern(C) png_structp png_nsj_create_read_struct(
     png_voidp error_ptr,
     png_error_ptr error_fn,
     png_error_ptr warn_fn);
+
+/+
+png_structp png_create_read_struct(
+    png_const_charp user_png_ver,
+    png_voidp error_ptr,
+    png_error_ptr error_fn,
+    png_error_ptr warn_fn)
+{
+    libpngCallContextForD  dCallContext;
+    return png_create_read_struct( &dCallContext, user_png_ver, error_ptr, error_fn, warn_fn );
+}
+
+png_structp png_create_read_struct(
+    libpngCallContextForD*  dCallContext,
+    png_const_charp user_png_ver,
+    png_voidp error_ptr,
+    png_error_ptr error_fn,
+    png_error_ptr warn_fn)
+{
+    png_structp result;
+    result.png_ptr = png_nsj_create_read_struct( user_png_ver, error_ptr, error_fn, warn_fn );
+    result.dCallContext = dCallContext;
+    return result;
+}
++/
 
 alias png_nsj_create_read_struct png_create_read_struct;
 
